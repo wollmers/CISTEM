@@ -1,22 +1,20 @@
 #!/usr/bin/perl
+package Cistem;
 
 use strict;
 use warnings;
 
 use utf8;
-package Cistem;
 
 sub stem {
     my $word = shift;
     my $case_insensitive = shift;
 
-    #$word =~ tr/äöüÄÖÜ/aouAOU/; # seems faster
-
     my $upper = (ucfirst $word eq $word);
 
     $word = lc($word);
 
-    $word =~ tr/äöü/aou/; # seems slower
+    $word =~ tr/äöü/aou/; # seems slower than in front of ucfirst
 
     $word =~ s/ß/ss/g;
 
@@ -39,7 +37,6 @@ sub stem {
             last;
         }
     }
-
 
     $word =~s/(.)\*/$1$1/g;
 
@@ -95,8 +92,6 @@ sub segment{
     else{
         $rest = "";
     }
-
-
 
     return ($word,$rest);
 }
