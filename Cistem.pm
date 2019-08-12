@@ -1,46 +1,39 @@
 #!/usr/bin/perl
+
+use strict;
+use warnings;
+
 use utf8;
 package Cistem;
 
-sub stem{
-    $word = shift;
-    $case_insensitive = shift;
+sub stem {
+    my $word = shift;
+    my $case_insensitive = shift;
 
-    $word =~ s/Ü/U/g;
-    $word =~ s/Ö/O/g;
-    $word =~ s/Ä/A/g;
+    #$word =~ tr/äöüÄÖÜ/aouAOU/; # seems faster
 
-    $word =~ s/üü/uu/g; #necessary because of Perl Unicode problems
-    $word =~ s/öö/oo/g;
-    $word =~ s/ää/aa/g;
-
-    $word =~ s/ü/u/g;
-    $word =~ s/ö/o/g;
-    $word =~ s/ä/a/g;
-
-    $upper = (ucfirst $word eq $word);
+    my $upper = (ucfirst $word eq $word);
 
     $word = lc($word);
 
+    $word =~ tr/äöü/aou/; # seems slower
+
     $word =~ s/ß/ss/g;
 
-    $word =~ s/^ge(.{4,})/\1/;
+    $word =~ s/^ge(.{4,})/$1/;
 
     $word =~s/sch/\$/g;
     $word =~s/ei/\%/g;
     $word =~s/ie/\&/g;
 
-    $word =~ s/(.)\1/\1\*/g;
+    $word =~ s/(.)\1/$1*/g;
 
     while(length($word)>3){
         if(length($word)>5 && ($word =~ s/e[mr]$// || $word =~ s/nd$//)){
-            pass;
         }
-        elsif((!($upper) || $case_insensitive) && $word =~ s/t$//){
-            pass;
+        elsif( (!($upper) || $case_insensitive) && $word =~ s/t$//){
         }
         elsif($word =~ s/[esn]$//){
-            pass;
         }
         else{
             last;
@@ -48,7 +41,7 @@ sub stem{
     }
 
 
-    $word =~s/(.)\*/\1\1/g;
+    $word =~s/(.)\*/$1$1/g;
 
     $word =~s/\$/sch/g;
     $word =~s/\%/ei/g;
@@ -58,21 +51,21 @@ sub stem{
 }
 
 sub segment{
-    $word = shift;
-    $case_insensitive = shift;
-    $rest_length = 0;
+    my $word = shift;
+    my $case_insensitive = shift;
+    my $rest_length = 0;
 
-    $upper = (ucfirst $word eq $word);
+    my $upper = (ucfirst $word eq $word);
 
     $word = lc($word);
 
-    $original = $word;
+    my $original = $word;
 
     $word =~s/sch/\$/g;
     $word =~s/ei/\%/g;
     $word =~s/ie/\&/g;
 
-    $word =~ s/(.)\1/\1\*/g;
+    $word =~ s/(.)\1/$1*/g;
 
     while(length($word)>3){
         if(length($word)>5 && ($word =~ s/(e[mr])$// || $word =~ s/(nd)$//)){
@@ -89,12 +82,13 @@ sub segment{
         }
     }
 
-    $word =~s/(.)\*/\1\1/g;
+    $word =~s/(.)\*/$1$1/g;
 
     $word =~s/\$/sch/g;
     $word =~s/\%/ei/g;
     $word =~s/\&/ie/g;
 
+    my $rest;
     if($rest_length){
         $rest = substr($original, - $rest_length);
     }
@@ -106,6 +100,8 @@ sub segment{
 
     return ($word,$rest);
 }
+
+
 
 1;
 
