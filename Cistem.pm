@@ -6,9 +6,13 @@ use warnings;
 
 use utf8;
 
+use Unicode::Normalize;
+
 sub stem {
-    my $word = shift;
+    my $word = shift // '';
     my $case_insensitive = shift;
+
+    $word = NFC($word);
 
     my $upper = (ucfirst $word eq $word);
 
@@ -48,8 +52,11 @@ sub stem {
 }
 
 sub segment{
-    my $word = shift;
+    my $word = shift // '';
     my $case_insensitive = shift;
+
+    $word = NFC($word);
+
     my $rest_length = 0;
 
     my $upper = (ucfirst $word eq $word);
@@ -90,7 +97,7 @@ sub segment{
         $rest = substr($original, - $rest_length);
     }
     else{
-        $rest = "";
+        $rest = '';
     }
 
     return ($word,$rest);
