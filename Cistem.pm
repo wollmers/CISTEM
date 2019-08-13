@@ -8,6 +8,17 @@ use utf8;
 
 use Unicode::Normalize;
 
+=pod
+
+our $pattern_sch = qr/sch/;
+our $pattern_doubles = qr/^ge(.{4,})/;
+our $pattern_emr = qr/(e[mr])$/;
+our $pattern_nd  = qr/(nd)$/;
+our $pattern_t   = qr/t$/;
+our $pattern_esn   = qr/([esn])$/;
+
+=cut
+
 sub stem {
     my $word = shift // '';
     my $case_insensitive = shift;
@@ -44,6 +55,7 @@ sub stem {
 
     $word =~s/(.)\*/$1$1/g;
 
+
     $word =~s/\$/sch/g;
     $word =~s/\%/ei/g;
     $word =~s/\&/ie/g;
@@ -51,21 +63,34 @@ sub stem {
     return $word;
 }
 
-sub segment{
+sub segment {
     my $word = shift // '';
     my $case_insensitive = shift;
 
-    $word = NFC($word);
-
-    my $rest_length = 0;
+    #$word = NFC($word);
 
     my $upper = (ucfirst $word eq $word);
 
     $word = lc($word);
 
+    $word =~ tr/äöü/aou/; # seems slower than in front of ucfirst
+
+    $word =~ s/ß/ss/g;
+
+    my $prefix_length = 0;
+    my $suffix_length = 0;
+
+    my $prefix = '';
+    if ($word =~ s/^ge(.{4,})/$1/) {
+      $prefix_length = 2;
+      $prefix = 'ge';
+    }
+
     my $original = $word;
 
     $word =~s/sch/\$/g;
+
+
     $word =~s/ei/\%/g;
     $word =~s/ie/\&/g;
 
@@ -73,13 +98,13 @@ sub segment{
 
     while(length($word)>3){
         if(length($word)>5 && ($word =~ s/(e[mr])$// || $word =~ s/(nd)$//)){
-            $rest_length += 2;
+            $suffix_length += 2;
         }
         elsif((!($upper) || $case_insensitive) && $word =~ s/t$//){
-            $rest_length++;
+            $suffix_length++;
         }
         elsif($word =~ s/([esn])$//){
-            $rest_length++;
+            $suffix_length++;
         }
         else{
             last;
@@ -92,15 +117,17 @@ sub segment{
     $word =~s/\%/ei/g;
     $word =~s/\&/ie/g;
 
-    my $rest;
-    if($rest_length){
-        $rest = substr($original, - $rest_length);
+
+    my $suffix = '';
+
+    if($suffix_length){
+        $suffix = substr($original, - $suffix_length);
     }
     else{
-        $rest = '';
+        $suffix = '';
     }
 
-    return ($word,$rest);
+    return ($prefix, $word, $suffix);
 }
 
 
