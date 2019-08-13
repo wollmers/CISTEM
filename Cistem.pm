@@ -6,59 +6,34 @@ use warnings;
 
 use utf8;
 
-use Unicode::Normalize;
-
-=pod
-
-our $pattern_sch = qr/sch/;
-our $pattern_doubles = qr/^ge(.{4,})/;
-our $pattern_emr = qr/(e[mr])$/;
-our $pattern_nd  = qr/(nd)$/;
-our $pattern_t   = qr/t$/;
-our $pattern_esn   = qr/([esn])$/;
-
-=cut
-
 sub stem {
     my $word = shift // '';
     my $case_insensitive = shift;
 
-    $word = NFC($word);
-
     my $upper = (ucfirst $word eq $word);
 
-    $word = lc($word);
-
-    $word =~ tr/äöü/aou/; # seems slower than in front of ucfirst
-
+    $word =  lc($word);
+    $word =~ tr/äöü/aou/;
     $word =~ s/ß/ss/g;
 
     $word =~ s/^ge(.{4,})/$1/;
 
-    $word =~s/sch/\$/g;
-    $word =~s/ei/\%/g;
-    $word =~s/ie/\&/g;
-
+    $word =~ s/sch/\$/g;
+    $word =~ s/ei/\%/g;
+    $word =~ s/ie/\&/g;
     $word =~ s/(.)\1/$1*/g;
 
-    while(length($word)>3){
-        if(length($word)>5 && ($word =~ s/e[mr]$// || $word =~ s/nd$//)){
-        }
-        elsif( (!($upper) || $case_insensitive) && $word =~ s/t$//){
-        }
-        elsif($word =~ s/[esn]$//){
-        }
-        else{
-            last;
-        }
+    while(length($word)>3) {
+        if( length($word)>5 && ($word =~ s/e[mr]$// || $word =~ s/nd$//) ) {}
+        elsif( (!($upper) || $case_insensitive) && $word =~ s/t$//) {}
+        elsif( $word =~ s/[esn]$//) {}
+        else { last; }
     }
 
-    $word =~s/(.)\*/$1$1/g;
-
-
-    $word =~s/\$/sch/g;
-    $word =~s/\%/ei/g;
-    $word =~s/\&/ie/g;
+    $word =~ s/(.)\*/$1$1/g;
+    $word =~ s/\$/sch/g;
+    $word =~ s/\%/ei/g;
+    $word =~ s/\&/ie/g;
 
     return $word;
 }
@@ -67,70 +42,53 @@ sub segment {
     my $word = shift // '';
     my $case_insensitive = shift;
 
-    #$word = NFC($word);
-
     my $upper = (ucfirst $word eq $word);
 
-    $word = lc($word);
-
-    $word =~ tr/äöü/aou/; # seems slower than in front of ucfirst
-
+    $word =  lc($word);
+    $word =~ tr/äöü/aou/;
     $word =~ s/ß/ss/g;
-
-    my $prefix_length = 0;
-    my $suffix_length = 0;
 
     my $prefix = '';
     if ($word =~ s/^ge(.{4,})/$1/) {
-      $prefix_length = 2;
       $prefix = 'ge';
     }
 
     my $original = $word;
 
-    $word =~s/sch/\$/g;
-
-
-    $word =~s/ei/\%/g;
-    $word =~s/ie/\&/g;
-
+    $word =~ s/sch/\$/g;
+    $word =~ s/ei/\%/g;
+    $word =~ s/ie/\&/g;
     $word =~ s/(.)\1/$1*/g;
 
+    my $suffix_length = 0;
+
     while(length($word)>3){
-        if(length($word)>5 && ($word =~ s/(e[mr])$// || $word =~ s/(nd)$//)){
+        if( length($word)>5 && ($word =~ s/(e[mr])$// || $word =~ s/(nd)$//) ) {
             $suffix_length += 2;
         }
-        elsif((!($upper) || $case_insensitive) && $word =~ s/t$//){
+        elsif( (!($upper) || $case_insensitive) && $word =~ s/t$//) {
             $suffix_length++;
         }
-        elsif($word =~ s/([esn])$//){
+        elsif( $word =~ s/([esn])$//) {
             $suffix_length++;
         }
-        else{
-            last;
-        }
+        else{ last; }
     }
 
-    $word =~s/(.)\*/$1$1/g;
+    $word =~ s/(.)\*/$1$1/g;
 
-    $word =~s/\$/sch/g;
-    $word =~s/\%/ei/g;
-    $word =~s/\&/ie/g;
-
+    $word =~ s/\$/sch/g;
+    $word =~ s/\%/ei/g;
+    $word =~ s/\&/ie/g;
 
     my $suffix = '';
 
-    if($suffix_length){
+    if( $suffix_length ) {
         $suffix = substr($original, - $suffix_length);
-    }
-    else{
-        $suffix = '';
     }
 
     return ($prefix, $word, $suffix);
 }
-
-
 
 1;
 
